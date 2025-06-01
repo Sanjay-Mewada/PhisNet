@@ -17,7 +17,7 @@ load_dotenv()
 
 # === Initialize Flask App ===
 app = Flask(__name__)
-app.secret_key ="2da99a19297c25f7ebec570f2798e904"
+app.secret_key ="secret_key"
 
 
 # === MySQL Configuration ===
@@ -157,7 +157,7 @@ def get_emails():
 @app.route("/authorize")
 def authorize():
     flow = InstalledAppFlow.from_client_secrets_file(
-        r"C:\Users\sanja\OneDrive\Documents\credentials.json", SCOPES
+        "credentials.json", SCOPES
     )
     creds = flow.run_local_server(port=5002)
     session['access_token'] = creds.token
