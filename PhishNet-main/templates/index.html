@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PhishNet - Gmail Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f5f9;
+            color: #333;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .header {
+            background-color: #1e2a3d;
+            color: #fff;
+            text-align: center;
+            padding: 20px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            position: relative;
+            user-select: none;
+        }
+
+        .header .title {
+            font-size: 30px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+        }
+
+        .logout {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #ff4d4d;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout:hover,
+        .logout:focus {
+            background-color: #e03e3e;
+            outline: none;
+        }
+
+        .email-list {
+            max-width: 1200px;
+            margin: 40px auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .email-list {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .email-item {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            word-break: break-word;
+        }
+
+        .email-item:hover,
+        .email-item:focus-within {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+            outline: none;
+        }
+
+        .subject {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2b3e50;
+            margin-bottom: 8px;
+        }
+
+        .from {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        .snippet {
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .read-more {
+            font-size: 14px;
+            color: #007bff;
+            text-decoration: none;
+            margin-left: 5px;
+        }
+
+        .read-more:hover,
+        .read-more:focus {
+            text-decoration: underline;
+            outline: none;
+        }
+
+        .analysis {
+            background-color: #f9fafb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .analysis p {
+            font-size: 14px;
+            color: #444;
+            margin-bottom: 10px;
+        }
+
+        .classification {
+            font-weight: bold;
+        }
+
+        .phishing {
+            color: #ff6347;
+        }
+
+        .button {
+            display: inline-block;
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.3s;
+            margin: 5px 10px 0 0;
+            user-select: none;
+        }
+
+        .button:hover,
+        .button:focus {
+            background-color: #45a049;
+            outline: none;
+        }
+
+        .button.cancel {
+            background-color: #f44336;
+        }
+
+        .button.cancel:hover,
+        .button.cancel:focus {
+            background-color: #d32f2f;
+            outline: none;
+        }
+
+        @media (max-width: 768px) {
+            .header .title {
+                font-size: 24px;
+            }
+
+            .logout {
+                font-size: 12px;
+                padding: 8px 15px;
+            }
+
+            .email-list {
+                padding: 0 10px;
+            }
+
+            .subject {
+                font-size: 18px;
+            }
+
+            .snippet {
+                font-size: 13px;
+            }
+
+            .button {
+                font-size: 13px;
+                padding: 8px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header" role="banner">
+    <div class="title">PhishNet - Gmail Analyzer</div>
+    <a href="/logout" class="logout" aria-label="Logout from application">Logout</a>
+</div>
+
+<main class="email-list" role="main" aria-live="polite">
+    {% if email_analysis %}
+        {% for email in email_analysis %}
+            <article tabindex="0" class="email-item" aria-label="Email from {{ email.sender }} about {{ email.subject }}">
+                <div class="subject">{{ email.subject }}</div>
+                <div class="from">From: {{ email.sender }}</div>
+                <div class="snippet">
+                    {{ email.snippet }}
+                    <a href="/email/{{ email.id }}" class="read-more" aria-label="Read full email {{ email.subject }}">Read more</a>
+                </div>
+
+                <section class="analysis" aria-label="Email analysis">
+                    <p><strong>Sentiment:</strong> {{ email.sentiment }}</p>
+                    <p><strong>Category:</strong> {{ email.category }}</p>
+                    <p><strong>Deadline:</strong> {{ email.deadline }}</p>
+                    <p><strong>Action Items:</strong> 
+                        {% if email.action_items %}
+                            {{ email.action_items | join('') }}
+                        {% else %}
+                            None
+                        {% endif %}
+                    </p>
+                    <p><strong>Priority:</strong> {{ email.priority }}</p>
+                    <p><strong>Phishing Detected:</strong>
+                        <span class="classification {% if email.phishing_detected == 'Yes' %}phishing{% endif %}">
+                            {{ email.phishing_detected }}
+                        </span>
+                    </p>
+                    <p><strong>Explanation:</strong> {{ email.explanation }}</p>
+
+                    <div style="margin-top: 15px;">
+                        <a href="/reply/{{ email.id }}" class="button" aria-label="Reply to email from {{ email.sender }}">Reply</a>
+                        <a href="/cancel/{{ email.id }}" class="button cancel" aria-label="Cancel email from {{ email.sender }}">Cancel</a>
+                        <a href="/email/{{ email.id }}" class="button" aria-label="View full email from {{ email.sender }}">View Full Email</a>
+                    </div>
+                </section>
+            </article>
+        {% endfor %}
+    {% else %}
+        <p>No emails found or error fetching emails. <a href="{{ url_for('index') }}">Try Again</a></p>
+    {% endif %}
+</main>
+
+</body>
+</html>
